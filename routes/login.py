@@ -1,10 +1,10 @@
-from flask import session, redirect, request, url_for, jsonify, Blueprint, abort
+from flask import jsonify, Blueprint
 from forexconnect import ForexConnect
 
 import common_samples
 from sharp import sharp_api
 
-tables = Blueprint('tables', __name__)
+login = Blueprint('login', __name__)
 
 
 @sharp_api.function()
