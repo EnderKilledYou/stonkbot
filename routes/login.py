@@ -1,8 +1,7 @@
 from flask import jsonify, Blueprint
 from forexconnect import ForexConnect
 
-import common_samples
-from sharp import sharp_api
+from sharp_config import sharp_api
 
 login = Blueprint('login', __name__)
 
@@ -12,8 +11,8 @@ def login(str_user_i_d: str, str_password: str, str_url: str, str_connection: st
     with ForexConnect() as fx:
         try:
             fx.login(str_user_i_d, str_password, str_url,
-                     str_connection, str_session_id, str_pin,
-                     common_samples.session_status_changed)
+                     str_connection, None, None,
+                     session_status_changed)
 
             print("")
             print("Accounts:")
@@ -23,9 +22,14 @@ def login(str_user_i_d: str, str_password: str, str_url: str, str_connection: st
 
             print("")
         except Exception as e:
-            common_samples.print_exception(e)
+            print(e)
         try:
             fx.logout()
         except Exception as e:
-            common_samples.print_exception(e)
+            print(e)
     return jsonify({})
+
+
+def session_status_changed(session ,
+                           status ):
+    pass
