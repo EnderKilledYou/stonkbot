@@ -1,6 +1,7 @@
 from flask import jsonify, Blueprint
 from forexconnect import ForexConnect
 
+from routes.status_changed import session_status_changed
 from sharp_config import sharp_api
 
 login = Blueprint('login', __name__)
@@ -30,6 +31,3 @@ def login(str_user_i_d: str, str_password: str, str_url: str, str_connection: st
     return jsonify({})
 
 
-def session_status_changed(session ,
-                           status ):
-    pass
