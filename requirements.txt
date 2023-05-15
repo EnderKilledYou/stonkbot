@@ -1,5 +1,5 @@
-forexconnect
-flask
+forexconnect~=1.6.43
+flask~=2.2.5
 python-dotenv==0.21.1
 Flask-Sharp
 numpy==1.14.5

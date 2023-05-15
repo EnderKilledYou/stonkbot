@@ -1,44 +1,101 @@
-from flask import session, redirect, request, url_for, jsonify, Blueprint, abort
+from flask import jsonify, Blueprint
 from forexconnect import ForexConnect
 
+
 from routes.status_changed import session_status_changed
-from sharp_config import sharp_api
+
 
 tables = Blueprint('tables', __name__)
-
+from sharp_config.sharp_config import sharp_api
 
 @sharp_api.function()
 def get_orders_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+    """
+
+        :param str_user_i_d: The User login
+        :param str_password: The User Password
+        :param str_url: The url of the F-Service
+        :param str_connection: Demo or live
+        :return: Json list of the orders table
+        """
     return jsonify(get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.ORDERS))
 
 
 @sharp_api.function()
 def get_offers_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+    """
+
+        :param str_user_i_d: The User login
+        :param str_password: The User Password
+        :param str_url: The url of the F-Service
+        :param str_connection: Demo or live
+        :return: Json list of the offers table
+        """
     return jsonify(get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.OFFERS))
 
 
 @sharp_api.function()
 def get_accounts_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+    """
+
+        :param str_user_i_d: The User login
+        :param str_password: The User Password
+        :param str_url: The url of the F-Service
+        :param str_connection: Demo or live
+        :return: Json list of the accounts table
+        """
     return jsonify(get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.ACCOUNTS))
 
 
 @sharp_api.function()
 def get_closed_trades_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+    """
+
+        :param str_user_i_d: The User login
+        :param str_password: The User Password
+        :param str_url: The url of the F-Service
+        :param str_connection: Demo or live
+        :return: Json list of the trades table
+        """
     return jsonify(get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.CLOSED_TRADES))
 
 
 @sharp_api.function()
 def get_messages_trades_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+    """
+
+        :param str_user_i_d: The User login
+        :param str_password: The User Password
+        :param str_url: The url of the F-Service
+        :param str_connection: Demo or live
+        :return: Json list of the trades table
+        """
     return jsonify(get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.MESSAGES))
 
 
 @sharp_api.function()
 def get_summary_trades_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+    """
+
+        :param str_user_i_d: The User login
+        :param str_password: The User Password
+        :param str_url: The url of the F-Service
+        :param str_connection: Demo or live
+        :return: Json list of the trades table
+        """
     return jsonify(get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.SUMMARY))
 
 
 @sharp_api.function()
 def get_trades_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+    """
+
+    :param str_user_i_d: The User login
+    :param str_password: The User Password
+    :param str_url: The url of the F-Service
+    :param str_connection: Demo or live
+    :return: Json list of the trades table
+    """
     return jsonify(get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.TRADES))
 
 
@@ -48,6 +105,15 @@ def get_price_history(str_user_i_d, str_password, str_url, str_connection):
 
 
 def get_table(str_user_i_d, str_password, str_url, str_connection, table):
+    """
+
+    :param str_user_i_d: The User login
+    :param str_password: The User Password
+    :param str_url: The url of the F-Service
+    :param str_connection: Demo or live
+    :param table: The table you want
+    :return:
+    """
     with ForexConnect() as fx:
         fx.login(str_user_i_d, str_password, str_url,
                  str_connection, None, None,
