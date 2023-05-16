@@ -1,12 +1,11 @@
 from flask import jsonify, Blueprint
 from forexconnect import ForexConnect
 
-
 from routes.status_changed import session_status_changed
-
 
 tables = Blueprint('tables', __name__)
 from sharp_config.sharp_config import sharp_api
+
 
 @sharp_api.function()
 def get_orders_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
@@ -83,7 +82,7 @@ def get_summary_trades_table_api(str_user_i_d: str, str_password: str, str_url: 
         :param str_connection: Demo or live
         :return: Json list of the trades table
         """
-    return jsonify(get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.SUMMARY))
+    return get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.SUMMARY)
 
 
 @sharp_api.function()
@@ -121,7 +120,8 @@ def get_table(str_user_i_d, str_password, str_url, str_connection, table):
         table_manager = fx.table_manager
         tbl = table_manager.get_table(table)
         tbl_to_list = list(map(convert_row(tbl.columns), tbl))
-        return tbl_to_list
+        columns_to_list = list(map(lambda x: x.id, tbl.columns))
+        return {'columns': columns_to_list, 'tbl': tbl_to_list}
 
 
 def convert_row(columns):

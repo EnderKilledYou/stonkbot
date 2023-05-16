@@ -10,6 +10,16 @@ const routes: Array<RouteConfig> = [
     name: 'home',
     component: HomeView
   },
+      {
+    path: '/index.html',
+    name: 'home',
+    component: HomeView
+  },
+      {
+    path: '/index.php',
+    name: 'home',
+    component: HomeView
+  },
   {
     path: '/about',
     name: 'about',

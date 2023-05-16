@@ -1,6 +1,9 @@
 <template>
     <div>
-        <login-form :auth.sync="authCredentials"/>
+        <error-message :is-fetch-error="isFetchError" :message="message"/>
+        <login-form :auth.sync="authCredentials" v-show="!isAuthed" @login="LoginAttempt"/>
+        <table-selector :table.sync="table" :tables="tables" v-show="isAuthed"/>
+        <table-printer :auth="authCredentials" :table="table" v-show="IsTableSelected"/>
 
     </div>
 </template>
@@ -8,20 +11,63 @@
 import {Component, Vue, Watch} from 'vue-property-decorator';
 import LoginForm from "@/views/LoginForm.vue";
 import {AuthCredentials} from "@/views/AuthCredentials";
+import TableSelector from "@/views/TableSelector.vue";
+import TablePrinter from "@/views/TablePrinter.vue";
+import ErrorMessage from "@/views/ErrorMessage.vue";
 
+const api = require('@/api.js')
 
 @Component({
-    components: {LoginForm},
+    components: {ErrorMessage, TablePrinter, TableSelector, LoginForm},
 })
 export default class TableViewer extends Vue {
-    authCredentials: AuthCredentials = {
-        username: '',
-        password: ''
+    isAuthed: boolean = false;
+    private isFetchError: boolean = false;
+    private message: string = '';
+
+    get IsTableSelected(): boolean {
+        return this.table !== "Pick One";
+
     }
 
-    @Watch('authCredentials.username', {deep: true})
-    onAuthValueChanged(val: AuthCredentials) {
-        console.log(val)
+    authCredentials: AuthCredentials = {
+        username: '',
+        password: '',
+        url: 'https://www.fxcorporate.com/Hosts.jsp',
+        connectionType: 'Demo'
+    }
+    table = 'Pick One'
+    tables = [
+        "Pick One",
+        'Orders',
+        'Offers',
+        'Accounts',
+        'Closed Trades',
+        'Messages',
+        'Summary',
+        'Trades'
+    ]
+
+
+    @Watch('table') onTableSelectionChange(new_val: string, old_val: string) {
+        console.log("hi")
+    }
+
+
+    async LoginAttempt() {
+        try {
+            const loginResult = await api.API.login(this.authCredentials.username, this.authCredentials.password, this.authCredentials.url, this.authCredentials.connectionType, '', '')
+            if (loginResult.authenticated) {
+                this.isAuthed = true;
+                this.isFetchError = false;
+                this.message = '';
+            }
+
+        } catch (e: any) {
+            this.isFetchError = true;
+            this.message = e.message;
+        }
+
     }
 
     async created() {

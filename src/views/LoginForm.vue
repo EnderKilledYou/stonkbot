@@ -1,5 +1,21 @@
 <template>
     <b-form inline>
+        <label class="sr-only" for="inline-form-input-url">Backend Url</label>
+        <b-form-input
+                id="inline-form-input-url"
+                class="mb-2 mr-sm-2 mb-sm-0"
+                placeholder="Backend Url"
+
+                v-model="auth.url"
+        ></b-form-input>
+        <label class="sr-only" for="inline-form-input-type">Connection Type</label>
+        <b-form-input
+                id="inline-form-input-type"
+                class="mb-2 mr-sm-2 mb-sm-0"
+                placeholder="Demo"
+
+                v-model="auth.connectionType"
+        ></b-form-input>
         <label class="sr-only" for="inline-form-input-name">Username</label>
         <b-form-input
                 id="inline-form-input-name"
@@ -16,17 +32,21 @@
             ></b-form-input>
         </b-input-group>
 
-        <b-button variant="primary" >Save</b-button>
+        <b-button variant="primary" @click="LoginAttempt">Save</b-button>
     </b-form>
 </template>
 <script lang="ts">
 
-import {Component, ModelSync, Vue} from 'vue-property-decorator'
+import {Component, Emit, ModelSync, Vue} from 'vue-property-decorator'
 import {AuthCredentials} from "@/views/AuthCredentials";
 
 @Component
 export default class LoginForm extends Vue {
-    @ModelSync('auth','input') readonly authCredentials!: AuthCredentials;
+    @ModelSync('auth', 'input') readonly authCredentials!: AuthCredentials;
 
+    @Emit('login')
+    LoginAttempt() {
+
+    }
 }
 </script>
