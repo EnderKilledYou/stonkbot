@@ -1,6 +1,8 @@
 <template>
     <div>
         <error-message :is-fetch-error="isFetchError" :message="message"/>
+        <b-spinner v-if="loading"></b-spinner>
+        <h2 v-if="isAuthed">{{ authCredentials.username }}</h2>
         <login-form :auth.sync="authCredentials" v-show="!isAuthed" @login="LoginAttempt"/>
         <table-selector :table.sync="table" :tables="tables" v-show="isAuthed"/>
         <table-printer :auth="authCredentials" :table="table" v-show="IsTableSelected"/>
@@ -24,6 +26,7 @@ export default class TableViewer extends Vue {
     isAuthed: boolean = false;
     private isFetchError: boolean = false;
     private message: string = '';
+    private loading: boolean = false;
 
     get IsTableSelected(): boolean {
         return this.table !== "Pick One";
@@ -40,6 +43,7 @@ export default class TableViewer extends Vue {
     tables = [
         "Pick One",
         'Orders',
+        'Prices',
         'Offers',
         'Accounts',
         'Closed Trades',
@@ -55,6 +59,7 @@ export default class TableViewer extends Vue {
 
 
     async LoginAttempt() {
+        this.loading = true;
         try {
             const loginResult = await api.API.login(this.authCredentials.username, this.authCredentials.password, this.authCredentials.url, this.authCredentials.connectionType, '', '')
             if (loginResult.authenticated) {
@@ -66,6 +71,8 @@ export default class TableViewer extends Vue {
         } catch (e: any) {
             this.isFetchError = true;
             this.message = e.message;
+        } finally {
+            this.loading = false;
         }
 
     }

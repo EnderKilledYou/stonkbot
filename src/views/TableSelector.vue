@@ -6,7 +6,7 @@
                 :options="tables"
                 required
         ></b-form-select>
-        <b-button variant="primary">Load</b-button>
+
     </b-form-group>
 </template>
 <script lang="ts">

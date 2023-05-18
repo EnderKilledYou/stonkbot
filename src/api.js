@@ -110,9 +110,10 @@ static get_trades_table_api (str_user_i_d,str_password,str_url,str_connection,) 
         });
 }
 
-static get_price_history (str_user_i_d,str_password,str_url,str_connection,) {
+static get_price_history (str_instr,str_user_i_d,str_password,str_url,str_connection,) {
 
     return Core.makeRequest("/api/tables/get_price_history", {
+        str_instr: str_instr,
         str_user_i_d: str_user_i_d,
         str_password: str_password,
         str_url: str_url,

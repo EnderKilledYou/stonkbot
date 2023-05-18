@@ -29,10 +29,11 @@
         <b-input-group class="mb-2 mr-sm-2 mb-sm-0">
             <b-form-input type="password" id="inline-form-input-password"
                           v-model="auth.password"
+
             ></b-form-input>
         </b-input-group>
 
-        <b-button variant="primary" @click="LoginAttempt">Save</b-button>
+        <b-button variant="primary" @click="LoginAttempt">Login</b-button>
     </b-form>
 </template>
 <script lang="ts">

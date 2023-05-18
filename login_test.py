@@ -29,11 +29,18 @@ class LoginTest(unittest.TestCase):
 class TablesTestt(unittest.TestCase):
     def test_get_orders_table(self):
         get_table(app_config["STR_USER_I_D"], app_config["STR_PASSWORD"], app_config["STR_URL"],
-                        app_config["STR_CONNECTION"], ForexConnect.ORDERS)
+                  app_config["STR_CONNECTION"], ForexConnect.ORDERS)
+
     def test_get_offers_table(self):
         result = get_table(app_config["STR_USER_I_D"], app_config["STR_PASSWORD"], app_config["STR_URL"],
-                        app_config["STR_CONNECTION"], ForexConnect.OFFERS)
+                           app_config["STR_CONNECTION"], ForexConnect.OFFERS)
         print(result)
+
+    def test_get_summary_table(self):
+        result = get_table(app_config["STR_USER_I_D"], app_config["STR_PASSWORD"], app_config["STR_URL"],
+                           app_config["STR_CONNECTION"], ForexConnect.SUMMARY)
+        print(result)
+
 
 def session_status_changed_for_test(session,
                                     status):
