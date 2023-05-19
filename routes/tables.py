@@ -1,13 +1,43 @@
 import time
 
 from flask import jsonify, Blueprint
-from forexconnect import ForexConnect
+from forexconnect import ForexConnect, fxcorepy
 
 from routes.login_cache import login_cache
 from routes.status_changed import session_status_changed
 
 tables = Blueprint('tables', __name__)
 from sharp_config.sharp_config import sharp_api
+
+
+@sharp_api.function()
+def sell_order(str_instr: str, amount: int, str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+    if str_user_i_d in login_cache:
+        fx = login_cache[str_user_i_d]
+        offer = get_offer(fx, str_instr)
+        account = get_account(fx)
+        trade = Common.get_trade(fx, str_account, offer.offer_id)
+
+        if not trade:
+            raise Exception("There are no opened positions for instrument '{0}'".format(instrument))
+
+        if not account:
+            raise Exception(
+                "The account '{0}' is not valid".format(account))
+        else:
+            str_account = account.account_id
+            print("AccountID='{0}'".format(str_account))
+        request = fx.create_order_request(
+            order_type=fxcorepy.Constants.Orders.TRUE_MARKET_CLOSE,
+            OFFER_ID=offer.offer_id,
+            ACCOUNT_ID=str_account,
+            BUY_SELL=fxcorepy.Constants.SELL,
+            AMOUNT=amount,
+            TRADE_ID=trade.trade_id
+        )
+
+        if request is None:
+            raise Exception("Cannot create request")
 
 
 @sharp_api.function()
@@ -101,8 +131,7 @@ def get_trades_table_api(str_user_i_d: str, str_password: str, str_url: str, str
     return get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.TRADES)
 
 
-price_columns = ['Time', 'Price 1', 'Price 2', 'Price 3', 'Price 4', 'Price 5', 'Price 6', 'Price 7',
-                 'Price 8', '---']
+price_columns = ['Time', 'Price' ]
 
 
 @sharp_api.function()
@@ -142,9 +171,7 @@ def get_table(str_user_i_d, str_password, str_url, str_connection, table):
     """
     if str_user_i_d in login_cache:
         fx = login_cache[str_user_i_d]
-        fx.login(str_user_i_d, str_password, str_url,
-                 str_connection, None, None,
-                 session_status_changed)
+
         table_manager = fx.table_manager
         tbl = table_manager.get_table(table)
         tbl_to_list = list(map(convert_row(tbl.columns), tbl))
@@ -160,3 +187,16 @@ def convert_row(columns):
         return item
 
     return convert
+
+
+def get_offer(fx, s_instrument):
+    table_manager = fx.table_manager
+    offers_table = table_manager.get_table(ForexConnect.OFFERS)
+    for offer_row in offers_table:
+        if offer_row.instrument == s_instrument:
+            return offer_row
+
+
+def get_account(table_manager):
+    accounts_table = table_manager.get_table(ForexConnect.ACCOUNTS)
+    return accounts_table.get_row(0)
