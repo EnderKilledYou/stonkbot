@@ -1,27 +1,16 @@
 <template>
     <div>
-        <error-message :is-fetch-error="isFetchError" :message="message"/>
-        <b-button-group>
-            <b-button variant="primary" class="mb-2" v-b-modal.columns-config-modal>
-                Show Columns Picker
-            </b-button>
-        </b-button-group>
+        <error-message :is-fetch-error="isFetchError"  :message="message"/>
 
-        <BTableColumnsPicker
-                :allColumns="allColumns"
-                :currentColumns="columns"
-                :id="'columns-config-modal'"
-                @apply="applyColumnConfigs"
-        />
         <b-spinner small v-if="loading"></b-spinner>
         <b-form-group id="input-group-3" label="Instrument" label-for="instr" v-if="'Prices' == table">
             <b-form-select multiple :options="instrs" id="instr" v-model="selectedInstrs"></b-form-select>
         </b-form-group>
-
-        <fx-tab :columns="columns" :auth="auth" :datas="datas" :all_columns="allColumns"
-                :table="table" v-if="!IsPricesTable"/>
-        <fx-tab v-else :instr="instr" :auth="auth" :columns="columns" :datas="datas" :all_columns="allColumns"
-                :table="table" v-for="instr in selectedInstrs" />
+        <offers-tab :auth="auth" v-if="IsOffersTable" @fetch_error="print_error"/>
+        <fx-tab :auth="auth"
+                :table="table" v-else-if="!IsPricesTable" @fetch_error="print_error"/>
+        <fx-tab v-else :instr="instr" :auth="auth"
+                :table="table" v-for="instr in selectedInstrs" @fetch_error="print_error"/>
 
     </div>
 </template>
@@ -30,31 +19,33 @@ import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import {AuthCredentials} from "@/views/AuthCredentials";
 import ErrorMessage from "@/views/ErrorMessage.vue";
 import BTableColumnsPicker from "@/components/BTableColumnsPicker.vue";
-import FxTab from "@/views/FxTab.vue";
+import FxTab from "@/components/FxTab.vue";
+import OffersTab from "@/components/OffersTab.vue";
 
 
 @Component({
-    components: {FxTab, BTableColumnsPicker, ErrorMessage}
+    components: {OffersTab, FxTab, BTableColumnsPicker, ErrorMessage}
 })
 export default class TablePrinter extends Vue {
-    allColumns: string[] = [];
+
     loading = false;
     instr: string = "USD/CAD"
     instrs: string[] = ["USD/CAD", "USD/JPY", "USD/CHF", "XAU/USD", "GPB/USD"]
     selectedInstrs: string[] = ["USD/CAD", "USD/JPY", "USD/CHF", "XAU/USD", "GPB/USD"]
 
+    get IsOffersTable() {
+        return this.table === "Offers"
+    }
+
     get IsPricesTable() {
         return this.table === "Prices"
     }
 
-    applyColumnConfigs(new_columns: string[]) {
-        this.columns = new_columns;
-        localStorage.setItem(this.table, JSON.stringify(this.columns))
+    print_error(e: any) {
+        this.isFetchError = true;
+        this.message = e.message;
     }
 
-
-    columns: string[] = [];
-    datas: {}[] = []
     message: string = '';
     isFetchError: boolean = false;
     @Prop() table!: string;
@@ -82,7 +73,9 @@ export default class TablePrinter extends Vue {
 .background {
     color: #595959 !important;
 }
-
+.white {
+    color: #08210c !important;
+}
 .negative {
     color: #dc3545 !important;
 }

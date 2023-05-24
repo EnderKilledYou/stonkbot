@@ -1,7 +1,7 @@
 import time
 
 from flask import jsonify, Blueprint
-from forexconnect import ForexConnect, fxcorepy
+from forexconnect import ForexConnect, fxcorepy, Common, TableListener
 
 from routes.login_cache import login_cache
 from routes.status_changed import session_status_changed
@@ -12,32 +12,99 @@ from sharp_config.sharp_config import sharp_api
 
 @sharp_api.function()
 def sell_order(str_instr: str, amount: int, str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
-    if str_user_i_d in login_cache:
-        fx = login_cache[str_user_i_d]
-        offer = get_offer(fx, str_instr)
-        account = get_account(fx)
-        trade = Common.get_trade(fx, str_account, offer.offer_id)
+    if str_user_i_d not in login_cache:
+        return {'error': "Relogin"}
+    fx = login_cache[str_user_i_d]
+    account = Common.get_account(fx)
 
-        if not trade:
-            raise Exception("There are no opened positions for instrument '{0}'".format(instrument))
+    if not account:
+        return {'error': "No Such Account"}
 
-        if not account:
-            raise Exception(
-                "The account '{0}' is not valid".format(account))
-        else:
-            str_account = account.account_id
-            print("AccountID='{0}'".format(str_account))
+    offer = Common.get_offer(fx, str_instr)
+    if not offer:
+        return {'error': "No Such Offer"}
+
+    str_account = account.account_id
+    trade = Common.get_trade(fx, str_account, offer.offer_id)
+
+    if not trade:
+        return {'error': "There are no opened positions for instrument '{0}'".format(str_instr)}
+
+    request = fx.create_order_request(
+        order_type=fxcorepy.Constants.Orders.TRUE_MARKET_CLOSE,
+        OFFER_ID=offer.offer_id,
+        ACCOUNT_ID=str_account,
+        BUY_SELL=fxcorepy.Constants.SELL,
+        AMOUNT=amount,
+        TRADE_ID=trade.trade_id
+    )
+
+    if request is None:
+        raise Exception("Cannot create request")
+
+
+def get_order_type(order_type):
+    if order_type == "LIMIT":
+        return fxcorepy.Constants.Orders.LIMIT
+    if order_type == "LIMIT_ENTRY":
+        return fxcorepy.Constants.Orders.LIMIT_ENTRY
+    if order_type == "MARKET_CLOSE":
+        return fxcorepy.Constants.Orders.MARKET_CLOSE
+    if order_type == "MARKET_CLOSE_RANGE":
+        return fxcorepy.Constants.Orders.MARKET_CLOSE_RANGE
+    if order_type == "OPEN_LIMIT":
+        return fxcorepy.Constants.Orders.OPEN_LIMIT
+    if order_type == "STOP":
+        return fxcorepy.Constants.Orders.STOP
+    if order_type == "STOP_ENTRY":
+        return fxcorepy.Constants.Orders.STOP_ENTRY
+    if order_type == "TRUE_MARKET_CLOSE":
+        return fxcorepy.Constants.Orders.TRUE_MARKET_CLOSE
+    if order_type == "TRUE_MARKET_OPEN":
+        return fxcorepy.Constants.Orders.TRUE_MARKET_OPEN
+
+
+@sharp_api.function()
+def buy_order(str_instr: str, amount: int, order_type: str, str_user_i_d: str, str_password: str, str_url: str,
+              str_connection: str):
+    if str_user_i_d not in login_cache:
+        return {'error': "Relogin"}
+
+    fx = login_cache[str_user_i_d]
+    account = Common.get_account(fx)
+
+    if not account:
+        return {'error': "No Such Account"}
+
+    offer = Common.get_offer(fx, str_instr)
+    if not offer:
+        return {'error': "No Such Offer"}
+
+    order = get_order_type(order_type)
+    if not order:
+        return {'error': "No Such Order Type"}
+
+    str_account = account.account_id
+    # trade = Common.get_trade(fx, str_account, offer.offer_id)
+    #
+    # if not trade:
+    #     return {'error': "There are no opened positions for instrument '{0}'".format(str_instr)}
+
+    try:
         request = fx.create_order_request(
-            order_type=fxcorepy.Constants.Orders.TRUE_MARKET_CLOSE,
+            order_type=order,
             OFFER_ID=offer.offer_id,
             ACCOUNT_ID=str_account,
-            BUY_SELL=fxcorepy.Constants.SELL,
+            BUY_SELL=fxcorepy.Constants.BUY,
             AMOUNT=amount,
-            TRADE_ID=trade.trade_id
+            # TRADE_ID=trade.trade_id
         )
+        if request is not None:
+            return {'success': True}
+    except Exception as e:
+        return {'error': str(e)}
 
-        if request is None:
-            raise Exception("Cannot create request")
+    return {'error': "The exchange doesn't Do This"}
 
 
 @sharp_api.function()
@@ -131,32 +198,53 @@ def get_trades_table_api(str_user_i_d: str, str_password: str, str_url: str, str
     return get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.TRADES)
 
 
-price_columns = ['Time', 'Price' ]
+price_columns = ['Time', 'bid_open', 'bid_high', 'bid_low', 'bid_close', 'ask_open', 'ask_high', 'ask_low', 'ask_close',
+                 'volume']
 
 
 @sharp_api.function()
 def get_price_history(str_instr: str, str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
     try:
-        if str_user_i_d in login_cache:
-            fx = login_cache[str_user_i_d]
-            history = fx.get_history(str_instr, "m1", None, None, 20)
-            output = history.tolist()
-            for i in range(0, len(output)):
-                item = output[i]
-                s = int(item[0] / 1000000000)
-                rme = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(s))
-                output[i] = {}
+        if str_user_i_d not in login_cache:
+            return {'error': "Relogin"}
+        fx = login_cache[str_user_i_d]
+        history = fx.get_history(str_instr, "m1", None, None, 20)
+        output = history.tolist()
+        for i in range(0, len(output)):
+            item = output[i]
+            s = int(item[0] / 1000000000)
+            rme = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(s))
+            output[i] = {}
 
-                tmp = [rme] + list(item[1:])
-                for j in range(0, len(price_columns)):
-                    output[i][price_columns[j]] = tmp[j]
+            tmp = [rme] + list(item[1:])
+            for j in range(0, len(price_columns)):
+                output[i][price_columns[j]] = tmp[j]
 
-            return {'columns': price_columns, 'tbl': output}
-            tbl_to_list = list(map(convert_row(history.columns), history))
-            columns_to_list = list(map(lambda x: x.id, history.columns))
-            return {'columns': columns_to_list, 'tbl': tbl_to_list}
+        return {'columns': price_columns, 'tbl': output}
+        tbl_to_list = list(map(convert_row(history.columns), history))
+        columns_to_list = list(map(lambda x: x.id, history.columns))
+        return {'columns': columns_to_list, 'tbl': tbl_to_list}
     except Exception as e:
         return {'error': str(e)}
+
+
+listeners = {}
+
+
+def on_added(table_listener, row_id, row):
+    print(str(table_listener) + " on_added : " + str(row_id))
+
+
+def on_changed(table_listener, row_id, row):
+    print(str(table_listener) + " on_changed : " + str(row_id))
+
+
+def on_deleted(table_listener, row_id, row):
+    print(str(table_listener) + " on_deleted : " + str(row_id))
+
+
+def on_status_changed(table_listener, status):
+    print(str(table_listener) + " status : " + status)
 
 
 def get_table(str_user_i_d, str_password, str_url, str_connection, table):
@@ -169,14 +257,27 @@ def get_table(str_user_i_d, str_password, str_url, str_connection, table):
     :param table: The table you want
     :return:
     """
-    if str_user_i_d in login_cache:
-        fx = login_cache[str_user_i_d]
+    if str_user_i_d not in login_cache:
+        return {'error': "Relogin"}
 
-        table_manager = fx.table_manager
-        tbl = table_manager.get_table(table)
-        tbl_to_list = list(map(convert_row(tbl.columns), tbl))
-        columns_to_list = list(map(lambda x: x.id, tbl.columns))
-        return {'columns': columns_to_list, 'tbl': tbl_to_list}
+    fx = login_cache[str_user_i_d]
+
+    table_manager = fx.table_manager
+
+    tbl = table_manager.get_table(table)
+
+    table_name = str_user_i_d + str(table)
+    if table_name not in listeners and table == ForexConnect.OFFERS:
+        listeners[table_name] = Common.subscribe_table_updates(tbl,
+                                                               on_change_callback=on_changed,
+                                                               on_add_callback=on_added,
+                                                               on_delete_callback=on_deleted,
+                                                               on_status_change_callback=on_changed
+                                                               )
+
+    tbl_to_list = list(map(convert_row(tbl.columns), tbl))
+    columns_to_list = list(map(lambda x: x.id, tbl.columns))
+    return {'columns': columns_to_list, 'tbl': tbl_to_list}
 
 
 def convert_row(columns):
@@ -195,8 +296,3 @@ def get_offer(fx, s_instrument):
     for offer_row in offers_table:
         if offer_row.instrument == s_instrument:
             return offer_row
-
-
-def get_account(table_manager):
-    accounts_table = table_manager.get_table(ForexConnect.ACCOUNTS)
-    return accounts_table.get_row(0)

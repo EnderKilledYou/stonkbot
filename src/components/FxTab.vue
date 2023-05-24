@@ -1,68 +1,88 @@
 <template>
     <div>
         <b-button-group>
-            <b-button variant="primary" class="mb-2" @click="load_table" v-if="'Prices' == table">
+            <b-button variant="primary" class="mb-2" @click="load_table">
                 Load
             </b-button>
-            <b-button variant="success" class="mb-2" @click="autoRefresh" v-if="!interval && 'Prices' == table">
+            <b-button variant="success" class="mb-2" @click="autoRefresh" v-if="!interval">
                 Auto Refresh
             </b-button>
-            <b-button variant="danger" class="mb-2" @click="autoRefreshOff" v-if="interval && 'Prices' == table">
+            <b-button variant="danger" class="mb-2" @click="autoRefreshOff" v-if="interval">
                 Stop Auto Refresh
             </b-button>
+            <b-button variant="primary" class="mb-2" v-b-modal="'columns-config-modal' + instr">
+                Show Columns Picker
+            </b-button>
             <b-button v-if="loading">
-                <b-spinner small ></b-spinner>
+                <b-spinner small></b-spinner>
             </b-button>
         </b-button-group>
-        <b-table-simple striped hover caption-top responsive class="">
-            <caption>{{ instr }} {{ table }} Table</caption>
-            <b-thead head-variant="dark">
-                <b-tr>
-                    <b-th v-for="column in columns">
-                        {{ correctSpace(column) }}
-                    </b-th>
-                </b-tr>
-            </b-thead>
-            <b-tbody>
-                <b-tr v-for="data in datas">
-                    <b-td v-for="column in columns" :class="getCellClasses">
 
-                        {{ data[column] }}
-                    </b-td>
-                </b-tr>
-            </b-tbody>
-        </b-table-simple>
+        <BTableColumnsPicker
+                :allColumns="all_columns"
+                :currentColumns="columns"
+                :id="'columns-config-modal' + instr"
+                @apply="applyColumnConfigs"
+        />
+        <b-card v-if="table === 'Offers' && datas.length >0">
+
+            <b-form-group
+                    label="Amount"
+                    label-for="amount_to_buy">
+                <b-input type="number" min="0" id="amount_to_buy" v-model="amount_to_buy"></b-input>
+            </b-form-group>
+            <b-form-group
+                    label="Instrument"
+                    label-for="select_instrument">
+                <b-form-select :options="all_instrs" id="select_instrument"
+                               v-model="selected_instr"></b-form-select>
+            </b-form-group>
+            <b-button variant="success" v-if="selected_instr.length >0" @click="Buy_Instrument">Buy
+                {{ selected_instr }}
+            </b-button>
+
+        </b-card>
+        <forex-table :columns="columns"   :datas="datas"
+                       :instr="instr" :table="table"/>
     </div>
 </template>
 <script lang="ts">
+
+
 import {Component, Prop, Vue} from "vue-property-decorator";
 import BTableColumnsPicker from "@/components/BTableColumnsPicker.vue";
 import ErrorMessage from "@/views/ErrorMessage.vue";
 import {AuthCredentials} from "@/views/AuthCredentials";
+import ForexTable from "@/components/ForexTable.vue";
 
 const api = require('../api.js')
-const space = require('to-space-case');
 
-function isNumber(rowValue: any) {
-    return !isNaN(+rowValue);
-}
+
+
 
 @Component({
-    components: {FxTab, BTableColumnsPicker, ErrorMessage}
+    components: {ForexTable,  BTableColumnsPicker, ErrorMessage}
 })
 
 export default class FxTab extends Vue {
-    @Prop({default: []}) columns!: string [];
-    @Prop({default: []}) datas!: {}[]
+    columns: string [] = [];
+    datas: { [key: string]: any }[] = []
     @Prop({default: ''}) table!: string;
     @Prop() instr!: string;
     @Prop() auth!: AuthCredentials;
-    @Prop({default: []}) all_columns!: string[]
+    all_columns: string[] = []
+    amount_to_buy: number = 0;
+    selected_instr: string = ''
     private loading: boolean = false
     private interval: number | null = 0
 
-    correctSpace(st: string) {
-        return space(st)
+
+    get all_instrs() {
+        return this.datas.map(a => a['instrument'])
+    }
+
+    async Buy_Instrument() {
+        const result = await api.API.buy_order(this.selected_instr, this.amount_to_buy, this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
     }
 
     beforeUnmount() {
@@ -72,19 +92,11 @@ export default class FxTab extends Vue {
         }
     }
 
-    getCellClasses(columnName: string, rowValue: any) {
-        if (!isNumber(rowValue)) {
-            return ["background"];
-        }
-        if (rowValue === 0) {
-            return ["neutral"]
-        }
-        if (rowValue < 0) {
-            return ["negative"];
-        } else if (rowValue > 0) {
-            return ["positive"]
-        }
 
+
+    applyColumnConfigs(new_columns: string[]) {
+        this.columns = new_columns;
+        localStorage.setItem(this.table, JSON.stringify(this.columns))
     }
 
     autoRefresh() {
@@ -102,8 +114,11 @@ export default class FxTab extends Vue {
     }
 
     private async load_table() {
+        if (this.loading) {
+            return;
+        }
         try {
-            debugger;
+
             this.loading = true;
             let result;
             switch (this.table) {
@@ -178,6 +193,7 @@ export default class FxTab extends Vue {
             this.columns = JSON.parse(existing_columns_setup);
         } else {
             this.columns = result.columns;
+            this.all_columns = this.columns
             localStorage.setItem(this.table, JSON.stringify(this.columns))
         }
 

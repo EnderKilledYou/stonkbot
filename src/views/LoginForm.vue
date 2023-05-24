@@ -32,8 +32,11 @@
 
             ></b-form-input>
         </b-input-group>
+        <b-button-group>
+            <b-button variant="primary" @click="LoginAttempt">Login</b-button>
 
-        <b-button variant="primary" @click="LoginAttempt">Login</b-button>
+            <b-button variant="danger" @click="ClearStorage">Reset Cookies for new version</b-button>
+        </b-button-group>
     </b-form>
 </template>
 <script lang="ts">
@@ -44,6 +47,11 @@ import {AuthCredentials} from "@/views/AuthCredentials";
 @Component
 export default class LoginForm extends Vue {
     @ModelSync('auth', 'input') readonly authCredentials!: AuthCredentials;
+
+    ClearStorage() {
+        localStorage.clear()
+        alert("cleared")
+    }
 
     @Emit('login')
     LoginAttempt() {

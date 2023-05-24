@@ -40,6 +40,31 @@ export class API {
         });
 }
 
+static sell_order (str_instr,amount,str_user_i_d,str_password,str_url,str_connection,) {
+
+    return Core.makeRequest("/api/tables/sell_order", {
+        str_instr: str_instr,
+        amount: amount,
+        str_user_i_d: str_user_i_d,
+        str_password: str_password,
+        str_url: str_url,
+        str_connection: str_connection,
+        });
+}
+
+static buy_order (str_instr,amount,order_type,str_user_i_d,str_password,str_url,str_connection,) {
+
+    return Core.makeRequest("/api/tables/buy_order", {
+        str_instr: str_instr,
+        amount: amount,
+        order_type: order_type,
+        str_user_i_d: str_user_i_d,
+        str_password: str_password,
+        str_url: str_url,
+        str_connection: str_connection,
+        });
+}
+
 static get_orders_table_api (str_user_i_d,str_password,str_url,str_connection,) {
 
     return Core.makeRequest("/api/tables/get_orders_table_api", {

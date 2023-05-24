@@ -14,7 +14,7 @@ import {Component, Vue, Watch} from 'vue-property-decorator';
 import LoginForm from "@/views/LoginForm.vue";
 import {AuthCredentials} from "@/views/AuthCredentials";
 import TableSelector from "@/views/TableSelector.vue";
-import TablePrinter from "@/views/TablePrinter.vue";
+import TablePrinter from "@/components/TablePrinter.vue";
 import ErrorMessage from "@/views/ErrorMessage.vue";
 
 const api = require('@/api.js')
@@ -34,8 +34,8 @@ export default class TableViewer extends Vue {
     }
 
     authCredentials: AuthCredentials = {
-        username: '',
-        password: '',
+        username: 'D25946643',
+        password: '0dWql',
         url: 'https://www.fxcorporate.com/Hosts.jsp',
         connectionType: 'Demo'
     }
@@ -54,7 +54,7 @@ export default class TableViewer extends Vue {
 
 
     @Watch('table') onTableSelectionChange(new_val: string, old_val: string) {
-        console.log("hi")
+
     }
 
 

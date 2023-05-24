@@ -12,7 +12,7 @@
 <script lang="ts">
 import {Component,  Prop, PropSync, Vue} from "vue-property-decorator";
 import ErrorMessage from "@/views/ErrorMessage.vue";
-import TablePrinter from "@/views/TablePrinter.vue";
+import TablePrinter from "@/components/TablePrinter.vue";
 import LoginForm from "@/views/LoginForm.vue";
 import {AuthCredentials} from "@/views/AuthCredentials";
 
