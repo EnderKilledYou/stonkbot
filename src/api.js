@@ -40,11 +40,13 @@ export class API {
         });
 }
 
-static sell_order (str_instr,amount,str_user_i_d,str_password,str_url,str_connection,) {
+static sell_order (str_instr,amount,rate,order_type,str_user_i_d,str_password,str_url,str_connection,) {
 
     return Core.makeRequest("/api/tables/sell_order", {
         str_instr: str_instr,
         amount: amount,
+        rate: rate,
+        order_type: order_type,
         str_user_i_d: str_user_i_d,
         str_password: str_password,
         str_url: str_url,
@@ -52,11 +54,12 @@ static sell_order (str_instr,amount,str_user_i_d,str_password,str_url,str_connec
         });
 }
 
-static buy_order (str_instr,amount,order_type,str_user_i_d,str_password,str_url,str_connection,) {
+static buy_order (str_instr,amount,rate,order_type,str_user_i_d,str_password,str_url,str_connection,) {
 
     return Core.makeRequest("/api/tables/buy_order", {
         str_instr: str_instr,
         amount: amount,
+        rate: rate,
         order_type: order_type,
         str_user_i_d: str_user_i_d,
         str_password: str_password,

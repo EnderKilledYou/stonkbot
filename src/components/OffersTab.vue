@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-button-group>
+        <b-button-group class="mx-1">
             <b-button variant="primary" class="mb-2" @click="load_table">
                 Load
             </b-button>
@@ -16,48 +16,64 @@
             <b-button v-if="loading">
                 <b-spinner small></b-spinner>
             </b-button>
+            <BTableColumnsPicker
+                    :allColumns="all_columns"
+                    :currentColumns="columns"
+                    :id="'columns-config-modal' "
+                    @apply="applyColumnConfigs"
+            />
         </b-button-group>
 
-        <BTableColumnsPicker
-                :allColumns="all_columns"
-                :currentColumns="columns"
-                :id="'columns-config-modal' "
-                @apply="applyColumnConfigs"
-        />
-        <b-form-group
-                label="Filter"
-                label-for="select_instrument">
-            <b-form-select multiple :options="all_instrs" id="filter_instrument"
-                           v-model="selected_instrs"></b-form-select>
-        </b-form-group>
 
-        <b-form-group
-                label="Amount"
-                label-for="amount_to_buy">
-            <b-input type="number" min="0" id="amount_to_buy" v-model="amount_to_buy"></b-input>
-        </b-form-group>
-        <b-form-group
-                label="Instrument"
-                label-for="select_instrument">
-            <b-form-select :options="all_instrs" id="select_instrument"
-                           v-model="selected_instr"></b-form-select>
-        </b-form-group>
+        <b-input-group size="sm" class="justify-content-between">
+            <b-form-group
+                    label="Filter"
+                    label-for="select_instrument">
+                <b-form-select multiple :options="all_instrs" id="filter_instrument"
+                               v-model="selected_instrs"></b-form-select>
+            </b-form-group>
 
-        <b-form-group
-                label="select_type"
-                label-for="select_type">
-            <b-form-select :options="all_order_type" v-model="order_type">
+            <b-form-group
+                    label="Rate"
+                    label-for="rate">
+                <b-input type="number" class="text-right" step=".01" min="0" id="rate" v-model="rate"></b-input>
+            </b-form-group>
+            <b-form-group
+                    label="Amount"
+                    label-for="amount_to_buy">
+                <b-input type="number" class="text-right" step=".01" min="0" id="amount_to_buy"
+                         v-model="amount_to_buy"></b-input>
+            </b-form-group>
 
-            </b-form-select>
-        </b-form-group>
-        <b-button variant="success" v-if="selected_instr.length >0" @click="Buy_Instrument">Buy
+            <b-form-group
+                    label="Instrument"
+                    label-for="select_instrument">
+                <b-form-select :options="all_instrs" id="select_instrument"
+                               v-model="selected_instr"></b-form-select>
+            </b-form-group>
+
+            <b-form-group
+                    label="Order Type"
+                    label-for="select_type">
+                <b-form-select :options="all_order_type" v-model="order_type">
+
+                </b-form-select>
+            </b-form-group>
+        </b-input-group>
+        <b-button variant="success" v-if="can_show_buy_button"
+                  @click="Buy_Instrument">Buy
+            {{ amount_to_buy }} of {{ rate }}
             {{ selected_instr }}
         </b-button>
-        <b-button variant="danger" v-if="selected_instr.length >0" @click="Sell_Instrument">Buy
+        <b-button variant="danger" v-if="can_show_sell_button"
+                  @click="Sell_Instrument">Sell
+            {{ amount_to_buy }} of {{ rate }}
             {{ selected_instr }}
         </b-button>
-
-        <forex-table :columns="columns" :datas="filtered_datas"
+        <b-alert variant="success" show v-if="success">
+            {{ last_success }}
+        </b-alert>
+        <forex-table :columns="columns" :datas="filtered_datas" @cell_click="cell_click"
                      :instr="instr" :table="table"/>
     </div>
 </template>
@@ -85,9 +101,12 @@ export default class OffersTab extends Vue {
     @Prop() instr!: string;
     @Prop() auth!: AuthCredentials;
     all_columns: string[] = []
-    order_type: string = "LIMIT"
+    order_type: string = "ENTRY"
     all_order_type: string[] = ["LIMIT",
         "LIMIT_ENTRY",
+        "ENTRY",
+        "CLOSE_ENTRY",
+        "STOP_ENTRY",
         "MARKET_CLOSE",
         "MARKET_CLOSE_RANGE",
         "MARKET_OPEN",
@@ -99,12 +118,33 @@ export default class OffersTab extends Vue {
         "TRUE_MARKET_OPEN"]
     amount_to_buy: number = 0;
     selected_instr: string = ''
+    rate: number = 0.0
     private loading: boolean = false
     private interval: number | null = 0
+    last_success: string = '';
+    success = false
 
     get filtered_datas() {
         return this.datas.filter(this.filter_instrs)
 
+
+    }
+
+    get can_show_sell_button() {
+        return this.selected_instr.length > 0 && this.amount_to_buy > 0 && this.rate > 0
+    }
+
+    get can_show_buy_button() {
+        return this.selected_instr.length > 0 && this.amount_to_buy > 0 && this.rate > 0
+    }
+
+    cell_click(column: string, value: string, row: any) {
+        switch (column) {
+            case "instrument":
+                this.selected_instr = value;
+                this.rate = +row['ask']
+                break;
+        }
 
     }
 
@@ -120,19 +160,23 @@ export default class OffersTab extends Vue {
     }
 
     async Sell_Instrument() {
-
-    }
-
-    async Buy_Instrument() {
         try {
-
+            this.clear_error();
             this.loading = true;
-            const result = await api.API.buy_order(this.selected_instr, this.amount_to_buy, this.order_type, this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
-            if (result.success) {
-                //todo: success message
+            const result = await api.API.sell_order(this.selected_instr, +this.amount_to_buy, +this.rate, this.order_type, this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+            if (result) {
+                if (result.success) {
+                    debugger;
+                    this.print_success(result.message)
+                } else if (result.message) {
+                    this.print_error({message: result.message})
+                }
+
+            } else {
+                this.print_error({message: "Nothing was returned"})
             }
         } catch (e: any) {
-            this.print_error(e)
+            this.print_error({message: e.message})
 
 
         } finally {
@@ -140,7 +184,32 @@ export default class OffersTab extends Vue {
         }
     }
 
-    beforeUnmount() {
+    async Buy_Instrument() {
+        try {
+            this.clear_error();
+            this.loading = true;
+            const result = await api.API.buy_order(this.selected_instr, +this.amount_to_buy, +this.rate, this.order_type, this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+            if (result) {
+                if (result.success) {
+                    debugger;
+                    this.print_success(result.message)
+                } else if (result.message) {
+                    this.print_error({message: result.message})
+                }
+
+            } else {
+                this.print_error({message: "Nothing was returned"})
+            }
+        } catch (e: any) {
+            this.print_error({message: e.message})
+
+
+        } finally {
+            this.loading = false;
+        }
+    }
+
+    beforeDestroy() {
         if (this.interval) {
             clearInterval(this.interval);
 
@@ -195,7 +264,7 @@ export default class OffersTab extends Vue {
             return;
         }
         if (result.error) {
-            this.print_error(result);
+            this.print_error({message: result.error});
             if (this.interval) {
                 clearInterval(this.interval);
                 this.interval = null;
@@ -203,6 +272,7 @@ export default class OffersTab extends Vue {
             return;
         }
         this.update_table(result);
+        this.clear_error();
     }
 
     private update_table(result: any) {
@@ -220,10 +290,22 @@ export default class OffersTab extends Vue {
         this.$emit('fetch_success')
     }
 
+    private clear_error() {
+        this.success = false;
+        this.last_success = '';
+        this.$emit("fetch_error", null)
+
+    }
 
     private print_error(e: any) {
         this.$emit("fetch_error", e)
         console.log(e);
+    }
+
+    private print_success(success: string) {
+        this.last_success = success
+        this.success = true;
+
     }
 }
 </script>

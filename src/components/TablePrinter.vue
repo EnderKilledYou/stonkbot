@@ -1,6 +1,6 @@
 <template>
     <div>
-        <error-message :is-fetch-error="isFetchError"  :message="message"/>
+        <error-message :is-fetch-error="isFetchError" :message="message"/>
 
         <b-spinner small v-if="loading"></b-spinner>
         <b-form-group id="input-group-3" label="Instrument" label-for="instr" v-if="'Prices' == table">
@@ -42,8 +42,14 @@ export default class TablePrinter extends Vue {
     }
 
     print_error(e: any) {
-        this.isFetchError = true;
-        this.message = e.message;
+
+        if (e) {
+            this.isFetchError = true;
+            this.message = e.message;
+            return;
+        }
+        this.isFetchError = false;
+        this.message = '';
     }
 
     message: string = '';
@@ -73,9 +79,11 @@ export default class TablePrinter extends Vue {
 .background {
     color: #595959 !important;
 }
+
 .white {
     color: #08210c !important;
 }
+
 .negative {
     color: #dc3545 !important;
 }

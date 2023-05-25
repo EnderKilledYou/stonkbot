@@ -9,8 +9,8 @@
             </b-tr>
         </b-thead>
         <b-tbody>
-            <b-tr v-for="data in datas">
-                <b-td @click="column_click(column,data[column])" v-for="column in columns"
+            <b-tr v-for="data in datas" :key="data['instrument']">
+                <b-td @click="cell_click(column,data[column],data)" v-for="column in columns"
                       :class="getCellClasses(column,data[column])">
 
                     {{ data[column] }}
@@ -40,8 +40,8 @@ export default class FxTab extends Vue {
     @Prop() instr!: string
     @Prop() table!: string
 
-    column_click(column: string, value: string) {
-        this.$emit("column_click", column, value);
+    cell_click(column: string, value: string, row: any) {
+        this.$emit("cell_click", column, value, row);
     }
 
     getCellClasses(columnName: string, rowValue: any) {

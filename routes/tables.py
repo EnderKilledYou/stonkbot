@@ -11,36 +11,50 @@ from sharp_config.sharp_config import sharp_api
 
 
 @sharp_api.function()
-def sell_order(str_instr: str, amount: int, str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+def sell_order(str_instr: str, amount: int, rate: float, order_type: str, str_user_i_d: str, str_password: str,
+              str_url: str,
+              str_connection: str):
     if str_user_i_d not in login_cache:
-        return {'error': "Relogin"}
+        return {'message': "Relogin"}
+
     fx = login_cache[str_user_i_d]
     account = Common.get_account(fx)
 
     if not account:
-        return {'error': "No Such Account"}
+        return {'message': "No Such Account"}
 
     offer = Common.get_offer(fx, str_instr)
     if not offer:
-        return {'error': "No Such Offer"}
+        return {'message': "No Such Offer"}
+
+    order = get_order_type(order_type)
+    if not order:
+        return {'message': "No Such Order Type"}
 
     str_account = account.account_id
     trade = Common.get_trade(fx, str_account, offer.offer_id)
 
     if not trade:
-        return {'error': "There are no opened positions for instrument '{0}'".format(str_instr)}
+      return {'error': "There are no trades for instrument '{0}'".format(str_instr)}
 
-    request = fx.create_order_request(
-        order_type=fxcorepy.Constants.Orders.TRUE_MARKET_CLOSE,
-        OFFER_ID=offer.offer_id,
-        ACCOUNT_ID=str_account,
-        BUY_SELL=fxcorepy.Constants.SELL,
-        AMOUNT=amount,
-        TRADE_ID=trade.trade_id
-    )
+    try:
+        request = fx.create_order_request(
+            order_type=order,
+            SYMBOL=offer.instrument,
+            ACCOUNT_ID=str_account,
+            BUY_SELL=fxcorepy.Constants.SELL,
+            AMOUNT=amount,
+            RATE=rate,
+            TRADE_ID=trade.trade_id
+        )
+        if request is not None:
+            resp = fx.send_request(request)
+            order_id = resp.order_id
+            return {'success': True, 'message': "Order is " + order_id}
+    except Exception as e:
+        return {'message': str(e)}
 
-    if request is None:
-        raise Exception("Cannot create request")
+    return {'message': "The exchange doesn't Do This"}
 
 
 def get_order_type(order_type):
@@ -62,49 +76,59 @@ def get_order_type(order_type):
         return fxcorepy.Constants.Orders.TRUE_MARKET_CLOSE
     if order_type == "TRUE_MARKET_OPEN":
         return fxcorepy.Constants.Orders.TRUE_MARKET_OPEN
+    if order_type == "ENTRY":
+        return fxcorepy.Constants.Orders.ENTRY
+    if order_type == "CLOSE_ENTRY":
+        return fxcorepy.Constants.Orders.CLOSE_ENTRY
+    if order_type == "STOP_ENTRY":
+        return fxcorepy.Constants.Orders.STOP_ENTRY
 
 
 @sharp_api.function()
-def buy_order(str_instr: str, amount: int, order_type: str, str_user_i_d: str, str_password: str, str_url: str,
+def buy_order(str_instr: str, amount: int, rate: float, order_type: str, str_user_i_d: str, str_password: str,
+              str_url: str,
               str_connection: str):
     if str_user_i_d not in login_cache:
-        return {'error': "Relogin"}
+        return {'message': "Relogin"}
 
     fx = login_cache[str_user_i_d]
     account = Common.get_account(fx)
 
     if not account:
-        return {'error': "No Such Account"}
+        return {'message': "No Such Account"}
 
     offer = Common.get_offer(fx, str_instr)
     if not offer:
-        return {'error': "No Such Offer"}
+        return {'message': "No Such Offer"}
 
     order = get_order_type(order_type)
     if not order:
-        return {'error': "No Such Order Type"}
+        return {'message': "No Such Order Type"}
 
     str_account = account.account_id
     # trade = Common.get_trade(fx, str_account, offer.offer_id)
     #
     # if not trade:
-    #     return {'error': "There are no opened positions for instrument '{0}'".format(str_instr)}
+    #   return {'error': "There are no trades for instrument '{0}'".format(str_instr)}
 
     try:
         request = fx.create_order_request(
             order_type=order,
-            OFFER_ID=offer.offer_id,
+            SYMBOL=offer.instrument,
             ACCOUNT_ID=str_account,
             BUY_SELL=fxcorepy.Constants.BUY,
             AMOUNT=amount,
+            RATE=rate,
             # TRADE_ID=trade.trade_id
         )
         if request is not None:
-            return {'success': True}
+            resp = fx.send_request(request)
+            order_id = resp.order_id
+            return {'success': True, 'message': "Order is " + order_id}
     except Exception as e:
-        return {'error': str(e)}
+        return {'message': str(e)}
 
-    return {'error': "The exchange doesn't Do This"}
+    return {'message': "The exchange doesn't Do This"}
 
 
 @sharp_api.function()
@@ -232,18 +256,22 @@ listeners = {}
 
 
 def on_added(table_listener, row_id, row):
+    return
     print(str(table_listener) + " on_added : " + str(row_id))
 
 
 def on_changed(table_listener, row_id, row):
+    return
     print(str(table_listener) + " on_changed : " + str(row_id))
 
 
 def on_deleted(table_listener, row_id, row):
+    return
     print(str(table_listener) + " on_deleted : " + str(row_id))
 
 
 def on_status_changed(table_listener, status):
+    return
     print(str(table_listener) + " status : " + status)
 
 
@@ -267,7 +295,7 @@ def get_table(str_user_i_d, str_password, str_url, str_connection, table):
     tbl = table_manager.get_table(table)
 
     table_name = str_user_i_d + str(table)
-    if table_name not in listeners and table == ForexConnect.OFFERS:
+    if table_name not in listeners and (table in [ForexConnect.OFFERS, ForexConnect.ORDERS]):
         listeners[table_name] = Common.subscribe_table_updates(tbl,
                                                                on_change_callback=on_changed,
                                                                on_add_callback=on_added,
