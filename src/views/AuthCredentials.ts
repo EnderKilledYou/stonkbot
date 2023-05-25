@@ -3,4 +3,5 @@ export type AuthCredentials = {
     password: string;
     url: string;
     connectionType: string;
+    userHash: string
 };

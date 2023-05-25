@@ -64,6 +64,7 @@ export default class TableViewer extends Vue {
             const loginResult = await api.API.login(this.authCredentials.username, this.authCredentials.password, this.authCredentials.url, this.authCredentials.connectionType, '', '')
             if (loginResult.authenticated) {
                 this.isAuthed = true;
+                this.authCredentials.userHash = loginResult.user_hash
                 this.isFetchError = false;
                 this.message = '';
             }

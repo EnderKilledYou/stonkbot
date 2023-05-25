@@ -1,23 +1,22 @@
 import time
 
-from flask import jsonify, Blueprint
-from forexconnect import ForexConnect, fxcorepy, Common, TableListener
+from flask import Blueprint
+from forexconnect import ForexConnect, fxcorepy, Common
 
-from routes.login_cache import login_cache
-from routes.status_changed import session_status_changed
+from routes.login_cache import login_cache, listeners_cache
 
 tables = Blueprint('tables', __name__)
 from sharp_config.sharp_config import sharp_api
 
 
 @sharp_api.function()
-def sell_order(str_instr: str, amount: int, rate: float, order_type: str, str_user_i_d: str, str_password: str,
-              str_url: str,
-              str_connection: str):
-    if str_user_i_d not in login_cache:
+def sell_order(str_instr: str, amount: int, rate: float, order_type: str, user_hash: str):
+    if user_hash is None:
+        return {'message': 'invalid sequence'}
+    if user_hash not in login_cache:
         return {'message': "Relogin"}
 
-    fx = login_cache[str_user_i_d]
+    fx = login_cache[user_hash]
     account = Common.get_account(fx)
 
     if not account:
@@ -35,7 +34,7 @@ def sell_order(str_instr: str, amount: int, rate: float, order_type: str, str_us
     trade = Common.get_trade(fx, str_account, offer.offer_id)
 
     if not trade:
-      return {'error': "There are no trades for instrument '{0}'".format(str_instr)}
+        return {'message': "There are no trades for instrument '{0}'".format(str_instr)}
 
     try:
         request = fx.create_order_request(
@@ -85,13 +84,13 @@ def get_order_type(order_type):
 
 
 @sharp_api.function()
-def buy_order(str_instr: str, amount: int, rate: float, order_type: str, str_user_i_d: str, str_password: str,
-              str_url: str,
-              str_connection: str):
-    if str_user_i_d not in login_cache:
+def buy_order(str_instr: str, amount: int, rate: float, order_type: str, user_hash: str):
+    if user_hash is None:
+        return {'message': 'invalid sequence'}
+    if user_hash not in login_cache:
         return {'message': "Relogin"}
 
-    fx = login_cache[str_user_i_d]
+    fx = login_cache[user_hash]
     account = Common.get_account(fx)
 
     if not account:
@@ -109,7 +108,7 @@ def buy_order(str_instr: str, amount: int, rate: float, order_type: str, str_use
     # trade = Common.get_trade(fx, str_account, offer.offer_id)
     #
     # if not trade:
-    #   return {'error': "There are no trades for instrument '{0}'".format(str_instr)}
+    #   return {'message': "There are no trades for instrument '{0}'".format(str_instr)}
 
     try:
         request = fx.create_order_request(
@@ -132,94 +131,80 @@ def buy_order(str_instr: str, amount: int, rate: float, order_type: str, str_use
 
 
 @sharp_api.function()
-def get_orders_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+def get_orders_table_api(user_hash: str):
     """
 
-        :param str_user_i_d: The User login
-        :param str_password: The User Password
-        :param str_url: The url of the F-Service
-        :param str_connection: Demo or live
+        :param user_hash: The User hash
+
         :return: Json list of the orders table
         """
-    return get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.ORDERS)
+    return get_table(user_hash, ForexConnect.ORDERS)
 
 
 @sharp_api.function()
-def get_offers_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+def get_offers_table_api(user_hash: str):
     """
 
-        :param str_user_i_d: The User login
-        :param str_password: The User Password
-        :param str_url: The url of the F-Service
-        :param str_connection: Demo or live
+        :param user_hash: The User hash
+
         :return: Json list of the offers table
         """
-    return get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.OFFERS)
+    return get_table(user_hash, ForexConnect.OFFERS)
 
 
 @sharp_api.function()
-def get_accounts_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+def get_accounts_table_api(user_hash: str):
     """
 
-        :param str_user_i_d: The User login
-        :param str_password: The User Password
-        :param str_url: The url of the F-Service
-        :param str_connection: Demo or live
-        :return: Json list of the accounts table
+        :param user_hash: The User hash
+
+        :return:   list of the accounts table
         """
-    return get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.ACCOUNTS)
+    return get_table(user_hash, ForexConnect.ACCOUNTS)
 
 
 @sharp_api.function()
-def get_closed_trades_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+def get_closed_trades_table_api(user_hash: str):
     """
 
-        :param str_user_i_d: The User login
-        :param str_password: The User Password
-        :param str_url: The url of the F-Service
-        :param str_connection: Demo or live
-        :return: Json list of the trades table
+        :param user_hash: The User hash
+
+        :return:   list of the trades table
         """
-    return get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.CLOSED_TRADES)
+    return get_table(user_hash, ForexConnect.CLOSED_TRADES)
 
 
 @sharp_api.function()
-def get_messages_trades_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+def get_messages_trades_table_api(user_hash: str):
     """
 
-        :param str_user_i_d: The User login
-        :param str_password: The User Password
-        :param str_url: The url of the F-Service
-        :param str_connection: Demo or live
-        :return: Json list of the trades table
+        :param user_hash: The User hash
+
+        :return:   list of the trades table
         """
-    return get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.MESSAGES)
+    return get_table(user_hash, ForexConnect.MESSAGES)
 
 
 @sharp_api.function()
-def get_summary_trades_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+def get_summary_trades_table_api(user_hash: str):
     """
 
-        :param str_user_i_d: The User login
-        :param str_password: The User Password
-        :param str_url: The url of the F-Service
-        :param str_connection: Demo or live
-        :return: Json list of the trades table
+        :param user_hash: The User hash
+
+        :return:   list of the trades table
         """
-    return get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.SUMMARY)
+    return get_table(user_hash, ForexConnect.SUMMARY)
 
 
 @sharp_api.function()
-def get_trades_table_api(str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+def get_trades_table_api(user_hash: str):
     """
 
-    :param str_user_i_d: The User login
-    :param str_password: The User Password
-    :param str_url: The url of the F-Service
-    :param str_connection: Demo or live
+    :param user_hash: The User hash
+
     :return: Json list of the trades table
     """
-    return get_table(str_user_i_d, str_password, str_url, str_connection, ForexConnect.TRADES)
+    return get_table(user_hash, ForexConnect.TRADES)
 
 
 price_columns = ['Time', 'bid_open', 'bid_high', 'bid_low', 'bid_close', 'ask_open', 'ask_high', 'ask_low', 'ask_close',
@@ -227,11 +212,14 @@ price_columns = ['Time', 'bid_open', 'bid_high', 'bid_low', 'bid_close', 'ask_op
 
 
 @sharp_api.function()
-def get_price_history(str_instr: str, str_user_i_d: str, str_password: str, str_url: str, str_connection: str):
+def get_price_history(str_instr: str, user_hash: str):
     try:
-        if str_user_i_d not in login_cache:
-            return {'error': "Relogin"}
-        fx = login_cache[str_user_i_d]
+
+        if user_hash is None:
+            return {'message': 'invalid sequence'}
+        if user_hash not in login_cache:
+            return {'message': "Relogin"}
+        fx = login_cache[user_hash]
         history = fx.get_history(str_instr, "m1", None, None, 20)
         output = history.tolist()
         for i in range(0, len(output)):
@@ -245,11 +233,9 @@ def get_price_history(str_instr: str, str_user_i_d: str, str_password: str, str_
                 output[i][price_columns[j]] = tmp[j]
 
         return {'columns': price_columns, 'tbl': output}
-        tbl_to_list = list(map(convert_row(history.columns), history))
-        columns_to_list = list(map(lambda x: x.id, history.columns))
-        return {'columns': columns_to_list, 'tbl': tbl_to_list}
+
     except Exception as e:
-        return {'error': str(e)}
+        return {'message': str(e)}
 
 
 listeners = {}
@@ -257,51 +243,49 @@ listeners = {}
 
 def on_added(table_listener, row_id, row):
     return
-    print(str(table_listener) + " on_added : " + str(row_id))
 
 
 def on_changed(table_listener, row_id, row):
     return
-    print(str(table_listener) + " on_changed : " + str(row_id))
 
 
 def on_deleted(table_listener, row_id, row):
     return
-    print(str(table_listener) + " on_deleted : " + str(row_id))
 
 
 def on_status_changed(table_listener, status):
     return
-    print(str(table_listener) + " status : " + status)
 
 
-def get_table(str_user_i_d, str_password, str_url, str_connection, table):
+def get_table(user_hash: str, table):
     """
 
-    :param str_user_i_d: The User login
-    :param str_password: The User Password
-    :param str_url: The url of the F-Service
-    :param str_connection: Demo or live
+    :param user_hash: The User hash
+
     :param table: The table you want
     :return:
     """
-    if str_user_i_d not in login_cache:
-        return {'error': "Relogin"}
 
-    fx = login_cache[str_user_i_d]
+    if user_hash is None:
+        return {'message': 'invalid sequence'}
+    if user_hash not in login_cache:
+        return {'message': "Relogin"}
+
+    fx = login_cache[user_hash]
 
     table_manager = fx.table_manager
 
     tbl = table_manager.get_table(table)
 
-    table_name = str_user_i_d + str(table)
-    if table_name not in listeners and (table in [ForexConnect.OFFERS, ForexConnect.ORDERS]):
+    table_name = user_hash + str(table)
+    if table_name not in listeners:
         listeners[table_name] = Common.subscribe_table_updates(tbl,
                                                                on_change_callback=on_changed,
                                                                on_add_callback=on_added,
                                                                on_delete_callback=on_deleted,
                                                                on_status_change_callback=on_changed
                                                                )
+        listeners_cache[user_hash].append(listeners[table_name])
 
     tbl_to_list = list(map(convert_row(tbl.columns), tbl))
     columns_to_list = list(map(lambda x: x.id, tbl.columns))
