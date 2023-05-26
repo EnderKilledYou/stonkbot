@@ -82,7 +82,8 @@ export default class FxTab extends Vue {
     }
 
     async Buy_Instrument() {
-        const result = await api.API.buy_order(this.selected_instr, this.amount_to_buy, this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+        alert("???")
+     //   const result = await api.API.buy_order(this.selected_instr, this.amount_to_buy, this.rate, this.auth.userHash)
     }
 
     beforeUnmount() {
@@ -124,39 +125,39 @@ export default class FxTab extends Vue {
             switch (this.table) {
                 case "Prices":
                     if (this.instr.length > 0) {
-                        result = await api.API.get_price_history(this.instr, this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+                        result = await api.API.get_price_history(this.instr, this.auth.userHash)
                         this.process_result(result);
                     }
                     break;
                 case "Summary":
 
-                    result = await api.API.get_summary_trades_table_api(this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+                    result = await api.API.get_summary_trades_table_api( this.auth.userHash)
                     this.process_result(result);
 
                     break;
                 case "Orders":
-                    result = await api.API.get_orders_table_api(this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+                    result = await api.API.get_orders_table_api(this.auth.userHash)
 
                     this.process_result(result);
                     break;
                 case "Trades":
-                    result = await api.API.get_trades_table_api(this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+                    result = await api.API.get_trades_table_api( this.auth.userHash)
                     this.process_result(result);
                     break;
                 case "Messages":
-                    result = await api.API.get_messages_trades_table_api(this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+                    result = await api.API.get_messages_trades_table_api( this.auth.userHash)
                     this.process_result(result);
                     break;
                 case "Closed Trades":
-                    result = await api.API.get_closed_trades_table_api(this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+                    result = await api.API.get_closed_trades_table_api( this.auth.userHash)
                     this.process_result(result);
                     break;
                 case "Offers":
-                    result = await api.API.get_offers_table_api(this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+                    result = await api.API.get_offers_table_api( this.auth.userHash)
                     this.process_result(result);
                     break;
                 case "Accounts":
-                    result = await api.API.get_accounts_table_api(this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+                    result = await api.API.get_accounts_table_api( this.auth.userHash)
                     this.process_result(result);
                     break;
                 default:

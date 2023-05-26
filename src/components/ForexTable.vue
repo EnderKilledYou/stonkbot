@@ -10,7 +10,7 @@
         </b-thead>
         <b-tbody>
             <b-tr v-for="data in datas" :key="data['instrument']">
-                <b-td @click="cell_click(column,data[column],data)" v-for="column in columns"
+                <b-td @click="cell_click(column,data[column],data)" v-for="column in columns" :key="column"
                       :class="getCellClasses(column,data[column])">
 
                     {{ data[column] }}

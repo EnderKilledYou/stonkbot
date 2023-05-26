@@ -37,7 +37,8 @@ export default class TableViewer extends Vue {
         username: 'D25946643',
         password: '0dWql',
         url: 'https://www.fxcorporate.com/Hosts.jsp',
-        connectionType: 'Demo'
+        connectionType: 'Demo',
+        userHash: ''
     }
     table = 'Pick One'
     tables = [

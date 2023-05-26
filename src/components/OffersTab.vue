@@ -163,7 +163,7 @@ export default class OffersTab extends Vue {
         try {
             this.clear_error();
             this.loading = true;
-            const result = await api.API.sell_order(this.selected_instr, +this.amount_to_buy, +this.rate, this.order_type, this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+            const result = await api.API.sell_order(this.selected_instr, +this.amount_to_buy, +this.rate, this.order_type, this.auth.userHash)
             if (result) {
                 if (result.success) {
                     debugger;
@@ -188,7 +188,7 @@ export default class OffersTab extends Vue {
         try {
             this.clear_error();
             this.loading = true;
-            const result = await api.API.buy_order(this.selected_instr, +this.amount_to_buy, +this.rate, this.order_type, this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+            const result = await api.API.buy_order(this.selected_instr, +this.amount_to_buy, +this.rate, this.order_type,  this.auth.userHash)
             if (result) {
                 if (result.success) {
                     debugger;
@@ -246,7 +246,7 @@ export default class OffersTab extends Vue {
             this.loading = true;
             let result;
 
-            result = await api.API.get_offers_table_api(this.auth.username, this.auth.password, this.auth.url, this.auth.connectionType)
+            result = await api.API.get_offers_table_api( this.auth.userHash)
             this.process_result(result);
 
 

@@ -84,6 +84,89 @@ def get_order_type(order_type):
 
 
 @sharp_api.function()
+def buy_market(str_instr: str, amount: int, user_hash: str):
+    if user_hash is None:
+        return {'message': 'invalid sequence'}
+    if user_hash not in login_cache:
+        return {'message': "Relogin"}
+
+    fx = login_cache[user_hash]
+    account = Common.get_account(fx)
+
+    if not account:
+        return {'message': "No Such Account"}
+
+    offer = Common.get_offer(fx, str_instr)
+    if not offer:
+        return {'message': "No Such Offer"}
+
+    order = fxcorepy.Constants.Orders.TRUE_MARKET_OPEN
+
+    str_account = account.account_id
+
+    try:
+        request = fx.create_order_request(
+            order_type=order,
+            SYMBOL=offer.instrument,
+            ACCOUNT_ID=str_account,
+            BUY_SELL=fxcorepy.Constants.BUY,
+            AMOUNT=amount,
+
+        )
+        if request is not None:
+            resp = fx.send_request(request)
+            order_id = resp.order_id
+            return {'success': True, 'message': "Order is " + order_id}
+    except Exception as e:
+        return {'message': str(e)}
+
+    return {'message': "The exchange doesn't Do This"}
+
+
+@sharp_api.function()
+def sell_market(str_instr: str, amount: int, user_hash: str):
+    if user_hash is None:
+        return {'message': 'invalid sequence'}
+    if user_hash not in login_cache:
+        return {'message': "Relogin"}
+
+    fx = login_cache[user_hash]
+    account = Common.get_account(fx)
+
+    if not account:
+        return {'message': "No Such Account"}
+
+    offer = Common.get_offer(fx, str_instr)
+    if not offer:
+        return {'message': "No Such Offer"}
+
+    order = fxcorepy.Constants.Orders.TRUE_MARKET_CLOSE
+
+    str_account = account.account_id
+    trade = Common.get_trade(fx, str_account, offer.offer_id)
+
+    if not trade:
+        return {'message': "There are no trades for instrument '{0}'".format(str_instr)}
+    try:
+        request = fx.create_order_request(
+            order_type=order,
+            SYMBOL=offer.instrument,
+            ACCOUNT_ID=str_account,
+            BUY_SELL=fxcorepy.Constants.SELL,
+            AMOUNT=amount,
+            TRADE_ID=trade.trade_id
+        )
+        if request is not None:
+            resp = fx.send_request(request)
+            order_id = resp.order_id
+            return {'success': True, 'message': "Order is " + order_id}
+    except Exception as e:
+        return {'message': str(e)}
+
+    return {'message': "The exchange doesn't Do This"}
+
+
+@sharp_api.function()
 def buy_order(str_instr: str, amount: int, rate: float, order_type: str, user_hash: str):
     if user_hash is None:
         return {'message': 'invalid sequence'}
@@ -105,10 +188,7 @@ def buy_order(str_instr: str, amount: int, rate: float, order_type: str, user_ha
         return {'message': "No Such Order Type"}
 
     str_account = account.account_id
-    # trade = Common.get_trade(fx, str_account, offer.offer_id)
-    #
-    # if not trade:
-    #   return {'message': "There are no trades for instrument '{0}'".format(str_instr)}
+
 
     try:
         request = fx.create_order_request(
@@ -118,7 +198,7 @@ def buy_order(str_instr: str, amount: int, rate: float, order_type: str, user_ha
             BUY_SELL=fxcorepy.Constants.BUY,
             AMOUNT=amount,
             RATE=rate,
-            # TRADE_ID=trade.trade_id
+
         )
         if request is not None:
             resp = fx.send_request(request)

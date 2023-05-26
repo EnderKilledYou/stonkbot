@@ -9,8 +9,8 @@
         <offers-tab :auth="auth" v-if="IsOffersTable" @fetch_error="print_error"/>
         <fx-tab :auth="auth"
                 :table="table" v-else-if="!IsPricesTable" @fetch_error="print_error"/>
-        <fx-tab v-else :instr="instr" :auth="auth"
-                :table="table" v-for="instr in selectedInstrs" @fetch_error="print_error"/>
+        <prices-tab v-else :auth="auth" @fetch_error="print_error" :selected-instrs="selectedInstrs"
+                    :table="table"/>
 
     </div>
 </template>
@@ -21,10 +21,11 @@ import ErrorMessage from "@/views/ErrorMessage.vue";
 import BTableColumnsPicker from "@/components/BTableColumnsPicker.vue";
 import FxTab from "@/components/FxTab.vue";
 import OffersTab from "@/components/OffersTab.vue";
+import PricesTab from "@/components/PricesTab.vue";
 
 
 @Component({
-    components: {OffersTab, FxTab, BTableColumnsPicker, ErrorMessage}
+    components: {PricesTab, OffersTab, FxTab, BTableColumnsPicker, ErrorMessage}
 })
 export default class TablePrinter extends Vue {
 

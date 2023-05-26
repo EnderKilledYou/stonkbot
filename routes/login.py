@@ -17,7 +17,7 @@ def login(str_user_i_d: str, str_password: str, str_url: str, str_connection: st
                  session_status_changed)
         user_hash = get_user_hash(str_user_i_d, str_password, str_url, str_connection)
         if user_hash is None:
-            return {'error': 'invalid sequence'}
+            return {'message': 'invalid sequence'}
         if str_user_i_d in listeners_cache:
             for listener in listeners_cache[user_hash]:
                 listener.unsubscribe()
@@ -34,4 +34,4 @@ def login(str_user_i_d: str, str_password: str, str_url: str, str_connection: st
     except Exception as e:
         print(e)
         return {'error': str(e)}
-    return {'authenticated': False}
+    return {'authenticated': False,'message': 'could not log you in'}
