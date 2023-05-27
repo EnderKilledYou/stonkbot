@@ -7,10 +7,13 @@
             <b-form-select multiple :options="instrs" id="instr" v-model="selectedInstrs"></b-form-select>
         </b-form-group>
         <offers-tab :auth="auth" v-if="IsOffersTable" @fetch_error="print_error"/>
-        <fx-tab :auth="auth"
-                :table="table" v-else-if="!IsPricesTable" @fetch_error="print_error"/>
-        <prices-tab v-else :auth="auth" @fetch_error="print_error" :selected-instrs="selectedInstrs"
+        <prices-tab v-else-if="IsPricesTable" :auth="auth" @fetch_error="print_error" :selected-instrs="selectedInstrs"
                     :table="table"/>
+        <trades-tab v-else-if="IsTradesTable" :auth="auth" @fetch_error="print_error" :selected-instrs="selectedInstrs"
+                    :table="table"/>
+
+        <fx-tab :auth="auth"
+                :table="table" v-else @fetch_error="print_error"/>
 
     </div>
 </template>
@@ -22,10 +25,11 @@ import BTableColumnsPicker from "@/components/BTableColumnsPicker.vue";
 import FxTab from "@/components/FxTab.vue";
 import OffersTab from "@/components/OffersTab.vue";
 import PricesTab from "@/components/PricesTab.vue";
+import TradesTab from "@/components/TradesTab.vue";
 
 
 @Component({
-    components: {PricesTab, OffersTab, FxTab, BTableColumnsPicker, ErrorMessage}
+    components: {TradesTab, PricesTab, OffersTab, FxTab, BTableColumnsPicker, ErrorMessage}
 })
 export default class TablePrinter extends Vue {
 
@@ -37,7 +41,9 @@ export default class TablePrinter extends Vue {
     get IsOffersTable() {
         return this.table === "Offers"
     }
-
+    get IsTradesTable(){
+        return this.table === "Trades"
+    }
     get IsPricesTable() {
         return this.table === "Prices"
     }

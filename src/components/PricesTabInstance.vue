@@ -10,6 +10,7 @@
             <b-button variant="success" @click="buy_market">Buy Market</b-button>
             <b-button variant="danger" @click="sell_market">Sell Market</b-button>
         </b-button-group>
+             <b-spinner v-if="loading"></b-spinner>
         <b-alert variant="success" show v-if="success">
             {{ last_success }}
         </b-alert>

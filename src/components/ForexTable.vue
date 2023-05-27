@@ -12,8 +12,13 @@
             <b-tr v-for="data in datas" :key="data['instrument']">
                 <b-td @click="cell_click(column,data[column],data)" v-for="column in columns" :key="column"
                       :class="getCellClasses(column,data[column])">
+                    <b-button variant="primary" v-if="IsButtonColumn(column)">
+                        {{ getButtonColumnText(column) }}
+                        {{ data[column] }}
 
-                    {{ data[column] }}
+                    </b-button>
+                    <p v-else>{{ data[column] }}</p>
+
                 </b-td>
             </b-tr>
         </b-tbody>
@@ -35,10 +40,33 @@ export default class FxTab extends Vue {
         return space(st)
     }
 
+    @Prop({default: ()=>[]}) button_columns!: { [key: string]: any }[];
     @Prop() columns!: string[]
     @Prop() datas!: { [key: string]: any }[]
     @Prop() instr!: string
     @Prop() table!: string
+
+    getButtonColumnText(column: string) {
+        const butCol = this.getButtonColumn(column);
+        if (!butCol) return "";
+        if ('column_text' in butCol)
+            return "";
+        return butCol['column_text']
+
+    }
+
+    IsButtonColumn(column: string) {
+        debugger
+        return this.getButtonColumn(column);
+    }
+
+    private getButtonColumn(column: string) {
+        for (const butCol of this.button_columns) {
+            if (butCol['column'] === column)
+                return butCol;
+        }
+        return null;
+    }
 
     cell_click(column: string, value: string, row: any) {
         this.$emit("cell_click", column, value, row);

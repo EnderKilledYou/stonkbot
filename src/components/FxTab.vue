@@ -42,8 +42,8 @@
             </b-button>
 
         </b-card>
-        <forex-table :columns="columns"   :datas="datas"
-                       :instr="instr" :table="table"/>
+        <forex-table :columns="columns" :datas="datas"
+                     :instr="instr" :table="table"/>
     </div>
 </template>
 <script lang="ts">
@@ -58,10 +58,8 @@ import ForexTable from "@/components/ForexTable.vue";
 const api = require('../api.js')
 
 
-
-
 @Component({
-    components: {ForexTable,  BTableColumnsPicker, ErrorMessage}
+    components: {ForexTable, BTableColumnsPicker, ErrorMessage}
 })
 
 export default class FxTab extends Vue {
@@ -69,6 +67,7 @@ export default class FxTab extends Vue {
     datas: { [key: string]: any }[] = []
     @Prop({default: ''}) table!: string;
     @Prop() instr!: string;
+    @Prop({default: () => []}) buttonColumns!: string[];
     @Prop() auth!: AuthCredentials;
     all_columns: string[] = []
     amount_to_buy: number = 0;
@@ -83,7 +82,7 @@ export default class FxTab extends Vue {
 
     async Buy_Instrument() {
         alert("???")
-     //   const result = await api.API.buy_order(this.selected_instr, this.amount_to_buy, this.rate, this.auth.userHash)
+        //   const result = await api.API.buy_order(this.selected_instr, this.amount_to_buy, this.rate, this.auth.userHash)
     }
 
     beforeUnmount() {
@@ -92,7 +91,6 @@ export default class FxTab extends Vue {
 
         }
     }
-
 
 
     applyColumnConfigs(new_columns: string[]) {
@@ -131,7 +129,7 @@ export default class FxTab extends Vue {
                     break;
                 case "Summary":
 
-                    result = await api.API.get_summary_trades_table_api( this.auth.userHash)
+                    result = await api.API.get_summary_trades_table_api(this.auth.userHash)
                     this.process_result(result);
 
                     break;
@@ -141,23 +139,23 @@ export default class FxTab extends Vue {
                     this.process_result(result);
                     break;
                 case "Trades":
-                    result = await api.API.get_trades_table_api( this.auth.userHash)
+                    result = await api.API.get_trades_table_api(this.auth.userHash)
                     this.process_result(result);
                     break;
                 case "Messages":
-                    result = await api.API.get_messages_trades_table_api( this.auth.userHash)
+                    result = await api.API.get_messages_trades_table_api(this.auth.userHash)
                     this.process_result(result);
                     break;
                 case "Closed Trades":
-                    result = await api.API.get_closed_trades_table_api( this.auth.userHash)
+                    result = await api.API.get_closed_trades_table_api(this.auth.userHash)
                     this.process_result(result);
                     break;
                 case "Offers":
-                    result = await api.API.get_offers_table_api( this.auth.userHash)
+                    result = await api.API.get_offers_table_api(this.auth.userHash)
                     this.process_result(result);
                     break;
                 case "Accounts":
-                    result = await api.API.get_accounts_table_api( this.auth.userHash)
+                    result = await api.API.get_accounts_table_api(this.auth.userHash)
                     this.process_result(result);
                     break;
                 default:
