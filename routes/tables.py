@@ -100,7 +100,7 @@ def buy_market(str_instr: str, amount: int, user_hash: str):
     if not offer:
         return {'message': "No Such Offer"}
 
-    order = fxcorepy.Constants.Orders.TRUE_MARKET_OPEN
+    order = fxcorepy.Constants.Orders.CLOSE_ENTRY
 
     str_account = account.account_id
 
@@ -112,6 +112,48 @@ def buy_market(str_instr: str, amount: int, user_hash: str):
             BUY_SELL=fxcorepy.Constants.BUY,
             AMOUNT=amount,
 
+        )
+        if request is not None:
+            resp = fx.send_request(request)
+            order_id = resp.order_id
+            return {'success': True, 'message': "Order is " + order_id}
+    except Exception as e:
+        return {'message': str(e)}
+
+    return {'message': "The exchange doesn't Do This"}
+
+
+@sharp_api.function()
+def close_trade(str_instr: str, amount: int, trade_id: int, user_hash: str):
+    if user_hash is None:
+        return {'message': 'invalid sequence'}
+    if user_hash not in login_cache:
+        return {'message': "Relogin"}
+
+    fx = login_cache[user_hash]
+    account = Common.get_account(fx)
+
+    if not account:
+        return {'message': "No Such Account"}
+
+    offer = Common.get_offer(fx, str_instr)
+    if not offer:
+        return {'message': "No Such Offer"}
+
+    order = fxcorepy.Constants.Orders.MARKET_CLOSE
+
+    str_account = account.account_id
+
+    try:
+        bid = offer.bid
+        request = fx.create_order_request(
+            order_type=order,
+            AMOUNT=amount,
+            OFFER_ID=offer.offer_id,
+            ACCOUNT_ID=str_account,
+            BUY_SELL=fxcorepy.Constants.SELL,
+            TRADE_ID=trade_id,
+            RATE=bid
         )
         if request is not None:
             resp = fx.send_request(request)
@@ -188,7 +230,6 @@ def buy_order(str_instr: str, amount: int, rate: float, order_type: str, user_ha
         return {'message': "No Such Order Type"}
 
     str_account = account.account_id
-
 
     try:
         request = fx.create_order_request(

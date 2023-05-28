@@ -42,7 +42,8 @@
             </b-button>
 
         </b-card>
-        <forex-table :columns="columns" :datas="datas"
+        <forex-table @cell_click="cell_click" :columns="columns" :datas="datas" :button_columns="button_columns"
+                     :column_key="column_key"
                      :instr="instr" :table="table"/>
     </div>
 </template>
@@ -54,6 +55,8 @@ import BTableColumnsPicker from "@/components/BTableColumnsPicker.vue";
 import ErrorMessage from "@/views/ErrorMessage.vue";
 import {AuthCredentials} from "@/views/AuthCredentials";
 import ForexTable from "@/components/ForexTable.vue";
+
+import {column_property} from "@/components/Column_property";
 
 const api = require('../api.js')
 
@@ -67,7 +70,8 @@ export default class FxTab extends Vue {
     datas: { [key: string]: any }[] = []
     @Prop({default: ''}) table!: string;
     @Prop() instr!: string;
-    @Prop({default: () => []}) buttonColumns!: string[];
+    @Prop({'default': () => 'instrument'}) column_key!: string;
+    @Prop({default: () => []}) button_columns!: column_property[];
     @Prop() auth!: AuthCredentials;
     all_columns: string[] = []
     amount_to_buy: number = 0;
@@ -75,6 +79,9 @@ export default class FxTab extends Vue {
     private loading: boolean = false
     private interval: number | null = 0
 
+    cell_click(column: string, value: string, row: any) {
+        this.$emit("cell_click", column, value, row);
+    }
 
     get all_instrs() {
         return this.datas.map(a => a['instrument'])
