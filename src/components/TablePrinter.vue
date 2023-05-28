@@ -11,7 +11,9 @@
                     :table="table"/>
         <trades-tab v-else-if="IsTradesTable" :auth="auth" @fetch_error="print_error" :selected-instrs="selectedInstrs"
                     :table="table"/>
-
+        <summary-tab v-else-if="IsSummarytable" :auth="auth" @fetch_error="print_error"
+                     :selected-instrs="selectedInstrs"
+                     :table="table"/>
         <fx-tab :auth="auth"
                 :table="table" v-else @fetch_error="print_error"/>
 
@@ -26,10 +28,11 @@ import FxTab from "@/components/FxTab.vue";
 import OffersTab from "@/components/OffersTab.vue";
 import PricesTab from "@/components/PricesTab.vue";
 import TradesTab from "@/components/TradesTab.vue";
+import SummaryTab from "@/components/SummaryTab.vue";
 
 
 @Component({
-    components: {TradesTab, PricesTab, OffersTab, FxTab, BTableColumnsPicker, ErrorMessage}
+    components: {SummaryTab, TradesTab, PricesTab, OffersTab, FxTab, BTableColumnsPicker, ErrorMessage}
 })
 export default class TablePrinter extends Vue {
 
@@ -41,9 +44,15 @@ export default class TablePrinter extends Vue {
     get IsOffersTable() {
         return this.table === "Offers"
     }
-    get IsTradesTable(){
+
+    get IsSummarytable() {
+        return this.table === "Summary"
+    }
+
+    get IsTradesTable() {
         return this.table === "Trades"
     }
+
     get IsPricesTable() {
         return this.table === "Prices"
     }

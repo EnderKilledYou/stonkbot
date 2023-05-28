@@ -100,7 +100,7 @@ def buy_market(str_instr: str, amount: int, user_hash: str):
     if not offer:
         return {'message': "No Such Offer"}
 
-    order = fxcorepy.Constants.Orders.CLOSE_ENTRY
+    order = fxcorepy.Constants.Orders.TRUE_MARKET_OPEN
 
     str_account = account.account_id
 
@@ -117,6 +117,42 @@ def buy_market(str_instr: str, amount: int, user_hash: str):
             resp = fx.send_request(request)
             order_id = resp.order_id
             return {'success': True, 'message': "Order is " + order_id}
+    except Exception as e:
+        return {'message': str(e)}
+
+    return {'message': "The exchange doesn't Do This"}
+
+
+@sharp_api.function()
+def close_instrument(str_instr: str, offer_id: int, user_hash: str):
+    if user_hash is None:
+        return {'message': 'invalid sequence'}
+    if user_hash not in login_cache:
+        return {'message': "Relogin"}
+
+    fx = login_cache[user_hash]
+    account = Common.get_account(fx)
+
+    if not account:
+        return {'message': "No Such Account"}
+
+    offer = Common.get_offer(fx, str_instr)
+    if not offer:
+        return {'message': "No Such Offer"}
+
+
+    trades_table = fx.get_table(fxcorepy.O2GTableType.TRADES)
+    trade_ids = []
+    for trade in trades_table:
+        if trade.offer_id == str(offer_id):
+            trade_ids.append(trade.trade_id)
+    try:
+        request = Common.create_close_trades_request(fx, trade_ids)
+        if request is not None:
+            resp = fx.send_request(request)
+            order_id = resp.order_id
+
+            return {'success': True, 'message': "Orders are " + order_id}
     except Exception as e:
         return {'message': str(e)}
 

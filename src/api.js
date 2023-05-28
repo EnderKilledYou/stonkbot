@@ -60,6 +60,15 @@ static buy_market (str_instr,amount,user_hash,) {
         });
 }
 
+static close_instrument (str_instr,offer_id,user_hash,) {
+
+    return Core.makeRequest("/api/tables/close_instrument", {
+        str_instr: str_instr,
+        offer_id: offer_id,
+        user_hash: user_hash,
+        });
+}
+
 static close_trade (str_instr,amount,trade_id,user_hash,) {
 
     return Core.makeRequest("/api/tables/close_trade", {
