@@ -140,7 +140,6 @@ def close_instrument(str_instr: str, offer_id: int, user_hash: str):
     if not offer:
         return {'message': "No Such Offer"}
 
-
     trades_table = fx.get_table(fxcorepy.O2GTableType.TRADES)
     trade_ids = []
     for trade in trades_table:
@@ -176,21 +175,10 @@ def close_trade(str_instr: str, amount: int, trade_id: int, user_hash: str):
     if not offer:
         return {'message': "No Such Offer"}
 
-    order = fxcorepy.Constants.Orders.MARKET_CLOSE
-
-    str_account = account.account_id
 
     try:
-        bid = offer.bid
-        request = fx.create_order_request(
-            order_type=order,
-            AMOUNT=amount,
-            OFFER_ID=offer.offer_id,
-            ACCOUNT_ID=str_account,
-            BUY_SELL=fxcorepy.Constants.SELL,
-            TRADE_ID=trade_id,
-            RATE=bid
-        )
+
+        request = Common.create_close_trades_request(fx, [str(trade_id)])
         if request is not None:
             resp = fx.send_request(request)
             order_id = resp.order_id
