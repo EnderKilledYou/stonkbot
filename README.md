@@ -1,24 +1,52 @@
 # stonkbot
 
-## Project setup
+## Project start as back ground
+
 ```
-yarn install
+cd /app
+sudo docker-compose up --build -d
 ```
 
-### Compiles and hot-reloads for development
+## Project stop
+
 ```
-yarn serve
+cd /app
+sudo docker-compose down
 ```
 
-### Compiles and minifies for production
+Edit
+[docker-compose.yml](docker-compose.yml) in /
+
+Set the
+
 ```
-yarn build
+    volumes:
+      - /var/www/html:/app/dist
 ```
 
-### Lints and fixes files
-```
-yarn lint
+path on the host to where php is served
+
+
+Edit environment to set what server the python host is on and what port
+
+```dotenv
+    environment:
+      VUE_APP_PYTHON_HOST_URL: "http://34.72.37.1:5000"
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+This can not be localhost it will need to be domain or ip.
+
+Also if you want to change the port, look up docker-compose port forwarding
+
+it's the line
+
+```dockerfile
+"5000:5000"
+```
+
+in docker-compose.yml where the first 5000 is the host port and the the second 5000 is the docker port.
+
+You would change the first 5000 to anything like 4444 and then your host will now have port 4444 available on the web,
+baring fw. 
+
+

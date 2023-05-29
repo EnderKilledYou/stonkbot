@@ -3,8 +3,10 @@ import App from './App.vue'
 import './registerServiceWorker'
 import router from './router'
 
-if (Vue.config.devtools) {
-    (window as any).baseURL = 'http://localhost:5000'
+console.log(process.env)
+if (process.env.VUE_APP_PYTHON_HOST_URL) {
+    (window as any).baseURL = process.env.VUE_APP_PYTHON_HOST_URL
+    console.log(process.env.VUE_APP_PYTHON_HOST_URL);
 }
 
 import {BootstrapVue, IconsPlugin} from 'bootstrap-vue'
