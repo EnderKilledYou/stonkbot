@@ -3,8 +3,14 @@ services:
   web:
     build: .
     ports:
-      - "5000:5000"
+      - "5000:80"
     environment:
       VUE_APP_PYTHON_HOST_URL: "http://34.72.37.1:5000"
     volumes:
-      - /var/www/html:/app/dist
+      - /var/www/html/app2:/srv/dist
+  php:
+    image: php:8.0-apache
+    ports:
+      - "80:80"
+    volumes:
+      - /var/www/html/:/var/www/html/

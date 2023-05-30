@@ -16,6 +16,6 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
 const vue = new Vue({
-    router,
+    // router,
     render: h => h(App)
 }).$mount('#app')

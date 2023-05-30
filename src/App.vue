@@ -1,7 +1,7 @@
 <template>
     <b-container fluid id="app">
 
-        <router-view/>
+          <table-viewer/>
     </b-container>
 </template>
 
@@ -30,3 +30,6 @@ nav a.router-link-exact-active {
     color: #42b983;
 }
 </style>
+<script setup lang="ts">
+import TableViewer from "@/views/TableViewer.vue";
+</script>
