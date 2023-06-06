@@ -34,8 +34,8 @@ export default class TableViewer extends Vue {
     }
 
     authCredentials: AuthCredentials = {
-        username: 'D25946643',
-        password: '0dWql',
+        username: '',
+        password: '',
         url: 'https://www.fxcorporate.com/Hosts.jsp',
         connectionType: 'Demo',
         userHash: ''
@@ -52,7 +52,7 @@ export default class TableViewer extends Vue {
         'Summary',
         'Trades'
     ]
-
+    
 
     @Watch('table') onTableSelectionChange(new_val: string, old_val: string) {
 
