@@ -1,9 +1,15 @@
 # stonkbot
 
+## Clone or unzip
+
+clone the app (git clone https://github.com/EnderKilledYou/stonkbot/ /app) or just download the zip and unzip it in /app
+
+You can replace /app with any folder it won't matter. Do not change /app in the docker-compose file that references the internal app
+
 ## Project start as back ground
 
 ```
-cd /app
+cd /app (or what ever)
 sudo docker-compose up --build -d
 ```
 
